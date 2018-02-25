@@ -1,0 +1,11 @@
+#!/usr/bin/env python2
+# (pyperclip supports only python2)
+
+from pyperclip import copy
+from sys import argv,stdin
+
+if len(argv) > 1:
+  copy(' '.join(argv[1:]))
+else:
+  copy(''.join(stdin.readlines()))
+

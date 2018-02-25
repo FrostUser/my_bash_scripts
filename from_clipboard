@@ -1,0 +1,8 @@
+#!/usr/bin/env python2
+# (pyperclip supports only python2)
+
+from __future__ import print_function
+from pyperclip import paste
+
+print(paste(), end='')
+
