@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 date_to_wait_for"
+  echo "'date' command allows a lot of arbitrary statements."
+  exit
+fi
+
+seconds=$(expr `date -d "$@" +"%s"` - `date +"%s"`)
+echo "Waiting for $((seconds/60/60)) hours $((seconds/60%60)) \
+minutes $((seconds%60)) seconds"
+sleep $seconds
+

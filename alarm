@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Some computers also have 'beep' command
+# WAV
+# aplay /usr/share/sounds/alsa/Side_Right.wav
+# OGG sound
+for i in {1..20}
+do
+  # if ! paplay /usr/share/sounds/LinuxMint/stereo/desktop-login.ogg; then
+  if ! paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga; then
+    exit
+  fi
+done
+

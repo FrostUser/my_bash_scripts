@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# REMINDER: Hold down Shift to copy text from elinks
+
+if [[ $# -lt 1 ]]
+then
+  echo "Usage: $0 search query"
+  exit
+fi
+
+ord()
+{
+  printf "%d" "'$1"
+}
+hex()
+{
+  printf "%x" "$1"
+}
+
+char_to_html()
+{
+  _char=$1
+  _code=$((`printf "%d" "'$char"`))
+
+  if [ $_code -ge $(ord а) ] && [ $_code -le $(ord я) ]
+  then
+    _code=$(( _code - $(ord а) + 0xe0 ))
+    _char=%$(hex $_code)
+  fi
+  if [ $_code -ge $(ord А) ] && [ $_code -le $(ord Я) ]
+  then
+    _code=$(( _code - $(ord А) + 0xc0 ))
+    _char=%$(hex $_code)
+  fi
+
+  echo $_char
+}
+
+to_html()
+{
+  str="$1"
+  output=""
+
+  for (( i = 0; i < ${#str}; i++ ))
+  do
+    char="${str[@]:$i:1}"
+    output+=$(char_to_html $char)
+  done
+
+  echo $output
+}
+
+search_str="$(echo $@ | sed 's/ /+/g')"
+# search_str=$(to_html $search_str)
+# query="http://www.google.ru/search?ie=windows-1251&hl=ru&source=hp&biw=&bih=&q=test+query&btnG=%CF%EE%E8%F1%EA+%E2+Google&gbv=1"
+# search_str="$(echo $@ | recode utf8..html | sed 's/ /+/g')"
+# query="http://www.google.ru/search?ie=windows-1251&hl=ru&source=hp&biw=&bih=&q=${search_str}&btnG=%CF%EE%E8%F1%EA+%E2+Google&gbv=1"
+query="http://www.google.ru/search?q=${search_str}"
+echo $search_str
+
+elinks "$query"
+
