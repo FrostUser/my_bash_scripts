@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# This script is best used in conjunction with 'sleep_until'
+#   sleep_until 12:30; alarm Appointment with A.B. in 15 minutes
+# This will play sound and show the message at 12:30
+
+echo $@
+
 # Some computers also have 'beep' command
 # WAV
 # aplay /usr/share/sounds/alsa/Side_Right.wav
