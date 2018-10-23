@@ -1,5 +1,13 @@
 #!/bin/bash
 
+###
+# Simple script to navigate between windows.
+# For example:
+#  move U
+# will switch Upwards (to the window above currently selected)
+
+################################################
+
 export LD_LIBRARY_PATH="$HOME/opt/lib:$HOME/opt/usr/lib:$LD_LIBRARY_PATH"
 export PATH="$HOME/opt/bin:$HOME/opt/usr/bin:$PATH"
 
@@ -9,9 +17,6 @@ if [[ $# -lt 1 ]]; then
   exit
 fi
 
-# Since all distances are integer values, we scale it by $SCALE to decrease precision loss
-SCALE=10000
-
 #### TODO: Fix obvious deadlock ocurring here
 # # Wait for other same processes to finish
 # while ! killall -0 $(basename $0) 2>/dev/null
@@ -20,6 +25,13 @@ SCALE=10000
 # done
 
 DIREC=$1
+
+###
+# Distance between adjacent window borders.
+# Negative value means that they can slightly overlap.
+# 0 forbids overlapping
+# Positive value requires some minimal distance between overlapping windows
+DIST_THRESHOLD=-20
 
 # TODO: Check if direction provided by user is in "RULD"
 
@@ -87,28 +99,26 @@ windowDistance()
   INTERSEC=0
 
   if [[ $3 == "R" ]]; then
-    [[ $Y2_TOP -ge $Y1_BOTTOM ]] && echo -1 && return
-    [[ $Y2_BOTTOM -le $Y1_TOP ]] && echo -1 && return
-    [[ $X2_CENTER -le $X1_CENTER ]] && echo -1 && return
+    [[ $Y2_TOP -ge $Y1_BOTTOM ]] && echo -999 && return
+    [[ $Y2_BOTTOM -le $Y1_TOP ]] && echo -999 && return
+    [[ $X2_CENTER -le $X1_CENTER ]] && echo -999 && return
     INTERSEC=$(( $(min Y1_BOTTOM Y2_BOTTOM) - $(max Y1_TOP Y2_TOP) ))
-    (( INTERSEC * 100 / HEIGHT < 10 )) && echo -1 && return
+    (( INTERSEC * 100 / HEIGHT < 10 )) && echo -999 && return
     # echo $(( (X2_CENTER - X1_CENTER) ))
     echo $(( (X2_LEFT - X1_RIGHT) ))
   fi
   if [[ $3 == "D" ]]; then
-    [[ $X2_RIGHT -le $X1_LEFT ]] && echo -1 && return
-    [[ $X2_LEFT -ge $X1_RIGHT ]] && echo -1 && return
-    [[ $Y2_CENTER -le $Y1_CENTER ]] && echo -1 && return
+    [[ $X2_RIGHT -le $X1_LEFT ]] && echo -999 && return
+    [[ $X2_LEFT -ge $X1_RIGHT ]] && echo -999 && return
+    [[ $Y2_CENTER -le $Y1_CENTER ]] && echo -999 && return
     INTERSEC=$(( $(min X1_RIGHT X2_RIGHT) - $(max X1_LEFT X2_LEFT) ))
     echo $INTERSEC > /dev/stderr
-    (( INTERSEC * 100 / WIDTH < 10 )) && echo -1 && return
+    (( INTERSEC * 100 / WIDTH < 10 )) && echo -999 && return
     # echo $(( (Y2_CENTER - Y1_CENTER) ))
     echo $(( (Y2_TOP - Y1_BOTTOM) ))
   fi
 }
 
-# TODO: $2 == -1 is sticked, $2 == 0 is first desktop.
-# How to get current desktop id?
 getNonsystemWindows()
 {
   cur_desktop=$(wmctrl -d | grep \* | awk '{print $1}')
@@ -126,13 +136,13 @@ wins=$(getNonsystemWindows)
 for win_id in ${wins[@]}
 do
   (($win_id == $CUR_WIN)) && continue
-  xwininfo -id $win_id | grep -q "IsUnMapped" && continue
+  xwininfo -all -id $win_id | grep -q "Hidden" && continue
 
   GEOM_2=$(xdotool getwindowgeometry --shell $win_id)
   [[ ${#DEBUG} -gt 0 ]] && xdotool getwindowname $win_id
   dist=$(windowDistance "$GEOM_1" "$GEOM_2" "$DIREC")
 
-  (( $dist < 0 )) && continue
+  (( $dist < $DIST_THRESHOLD )) && continue
 
   if (($chosen_id == -1 || $dist < $min_dist)); then
     min_dist=$dist
