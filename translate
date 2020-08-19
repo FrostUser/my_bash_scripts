@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]
+then
+  echo 
+  echo "English<->Russian translator"
+  echo "Usage: $0 word_to_translate"
+  echo
+  exit
+fi
+
+WORD="$@"
+
+START=0
+
+# iconv -f windows-1251 -t utf-8 | 
+
+wget -U mozilla -qO- "https://www.multitran.com/m.exe?l1=1&l2=2&s=${WORD}" | 
+  sed 's/<[^>]*>//g' |
+  sed 's/&nbsp;/ /g' |
+  while read x;
+  do
+    if [[ $x = *"тематик"* ]]
+    then
+      START=2
+    fi
+    if [ $START -eq 1 ] && [ ${#x} -gt 1 ]
+    then
+      echo "  $x"
+    fi
+    if [[ $x = *"createAutoComplete"* ]]
+    then
+      START=1
+    fi
+  done
+
