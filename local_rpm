@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [[ $# -lt 2 ]]; then
+  echo "Install rpm package locally"
+  echo "Usage: $0 url download_folder"
+  exit
+fi
+
+mkdir "$2"
+
+fname=""
+
+if [[ $1 == http* ]]; then
+  URL=$1
+  if [[ $1 == *html ]]; then
+    URL=$(wget -qO- "$1" | grep -A2 Binary | grep -o http[^\"]*rpm)
+  fi
+  fname=${URL##*/}
+
+  wget "$URL" -O $fname
+else
+  fname=$1
+fi
+fname="`readlink -f $fname`"
+cd "$2"
+# -u == replace all files. Be careful!
+rpm2cpio $fname | cpio -idvu
+
