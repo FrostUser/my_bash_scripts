@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Based on the ideas from:
+# https://adrianpopagh.blogspot.com/2020/12/quick-launcher-with-firefox-tabs-rofi.html
+
+# Requirements:
+#   *   brotab
+#   *   brotab browser extension (for firefox or chromium)
+#   *   wmctrl
+#   *   xprop
+
 # To be used with rofi:
 #  rofi -show-icons -show tabs -modes "tabs:./select_window_or_tab.sh"
 
