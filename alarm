@@ -5,6 +5,7 @@
 # This will play sound and show the message at 12:30
 
 echo $@
+(($# > 0)) && notify-send "$@"
 
 # Some computers also have 'beep' command
 # WAV
