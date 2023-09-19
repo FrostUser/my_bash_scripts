@@ -5,16 +5,16 @@
 if [[ $# -lt 1 ]]
 then
   echo
-  echo "Usage: $0 [-o] search query"
-  echo "  -o Output search results to stdout"
+  echo "$0: Do google search from within the terminal."
+  echo "This script output can also be piped to other applications"
+  echo "Usage: $0 search query"
   echo
   exit
 fi
 
-to_stdout=0
-if [[ "$1" == "-o" ]]; then
+if [ ! -t 1 ]; then
+  # Output is piped to another application
   to_stdout=1
-  shift
 fi
 
 ord()
@@ -60,10 +60,6 @@ to_html()
 }
 
 search_str="$(echo $@ | sed 's/ /+/g')"
-# search_str=$(to_html $search_str)
-# query="http://www.google.ru/search?ie=windows-1251&hl=ru&source=hp&biw=&bih=&q=test+query&btnG=%CF%EE%E8%F1%EA+%E2+Google&gbv=1"
-# search_str="$(echo $@ | recode utf8..html | sed 's/ /+/g')"
-# query="http://www.google.ru/search?ie=windows-1251&hl=ru&source=hp&biw=&bih=&q=${search_str}&btnG=%CF%EE%E8%F1%EA+%E2+Google&gbv=1"
 query="https://www.google.ru/search?q=${search_str}"
 echo $search_str
 
