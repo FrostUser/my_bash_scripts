@@ -11,33 +11,48 @@
 
 # To be used with rofi:
 #  rofi -show-icons -show tabs -modes "tabs:./select_window_or_tab.sh"
+#
+# See README.md about possible issues and additional setup instructions
 
 ################################################
 
 main()
 {
+  # Go to script directory
+  cd "$(dirname "$0")"
+
   if ((ROFI_RETV == 0)); then
-    win_list=$(get_win_list_except_firefox)
+    win_list=$(get_win_list_except_firefox_and_gnometerm)
     win_list_base64=$(echo -en "$win_list" | base64 -w 0)
-    tab_list=$(bt list | awk '{
+    ff_tab_list=$(bt list | awk '{
       printf "%s ", $1;                            // Tab ID
       printf "firefox ";
       for (i = 2; i <= NF; i++) {printf "%s ", $i} // Tab title
       printf "\n";
     }')
-    tab_list_base64=$(echo "$tab_list" | base64 -w 0)
-    echo -en "\0data\x1f$win_list_base64 $tab_list_base64\n"
+    gterm_tab_list=$(./gnome_terminal_list.sh | awk '{
+      printf "%s ", $1;                            // Tab ID
+      printf "term ";
+      for (i = 2; i <= NF; i++) {printf "%s ", $i} // Tab title
+      printf "\n";
+    }')
+    ff_tab_list_base64=$(echo "$ff_tab_list" | base64 -w 0)
+    gterm_tab_list_base64=$(echo "$gterm_tab_list" | base64 -w 0)
+    echo -en "\0data\x1f$win_list_base64 $ff_tab_list_base64\n"
   else
     data=($ROFI_DATA)
 
     win_list=$(echo "${data[0]}" | base64 -d)
-    tab_list=$(echo "${data[1]}" | base64 -d)
+    ff_tab_list=$(echo "${data[1]}" | base64 -d)
+    gterm_tab_list=$(echo "${data[2]}" | base64 -d)
   fi
   
   # Entry selection
   if [[ "$@" != "" ]]; then
     if [[ "$ROFI_INFO" == 0x* ]]; then
       wmctrl -ia "$ROFI_INFO"
+    elif [[ "$ROFI_INFO" == __gnome_term__* ]]; then
+      ./gnome_terminal_list.sh "$ROFI_INFO"
     else
       bt activate --focused "$ROFI_INFO"
     fi
@@ -45,7 +60,7 @@ main()
   fi
 
   # Sort by title
-  list=$(echo -e "$win_list\n$tab_list" | sort -k 3)
+  list=$(echo -e "$win_list\n$ff_tab_list\n$gterm_tab_list" | sort -k 3)
   
   # Output list of entries
   echo -en "$list" | awk '{
@@ -59,7 +74,7 @@ main()
   }'
 }
 
-get_win_list_except_firefox()
+get_win_list_except_firefox_and_gnometerm()
 {
   ### Find all windows
   for win_id in $(xprop -root | grep '_NET_CLIENT_LIST(WINDOW)' | grep -o '0x[0-9a-zA-Z]\+'); do
@@ -70,6 +85,8 @@ get_win_list_except_firefox()
 
     # Skip firefox windows
     [[ $win_class == "firefox" ]] && continue
+    # Skip gnome-terminal windows
+    [[ $win_class == "Gnome-terminal" ]] && continue
 
     win_class=$(echo "$win_class" | tr 'A-Z' 'a-z')
     echo -e "$win_id \t $win_class \t $win_name"
