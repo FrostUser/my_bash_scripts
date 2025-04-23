@@ -1,8 +1,11 @@
 #!/bin/bash
 
 if [[ $# -lt 2 ]]; then
+  echo
   echo "Install rpm package locally"
+  echo "Look through the https://vault.centos.org/ to get the URLs of packages that you need"
   echo "Usage: $0 url download_folder"
+  echo
   exit
 fi
 
